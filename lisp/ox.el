@@ -3228,7 +3228,7 @@ still inferior to file-local settings."
       (setq tree (org-export-filter-apply-functions
                   (plist-get info :filter-multipage)
                   (funcall
-                   (plist-get info :multipage-split-function) tree info)
+                   (cdr (assq 'multipage-split-function (plist-get info :translate-alist))) tree info)
                   info)))
     ;; Process citations and bibliography.  Replace each citation
     ;; and "print_bibliography" keyword in the parse tree with

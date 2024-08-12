@@ -85,6 +85,7 @@
     (line-break . org-html-line-break)
     (link . org-html-link)
     (multipage-inner-template . org-html-multipage-inner-template)
+    (multipage-split-function . org-html-multipage-split)
     (multipage-template . org-html-multipage-template)
     (node-property . org-html-node-property)
 ;;    (org-page . org-html-transcode-org-page)
@@ -214,7 +215,6 @@
     (:html-klipse-css nil nil org-html-klipse-css)
     (:html-klipse-js nil nil org-html-klipse-js)
     (:html-klipse-selection-script nil nil org-html-klipse-selection-script)
-    (:multipage-split-function nil nil org-html-multipage-split-function)
     (:infojs-opt "INFOJS_OPT" nil nil)
     ;; Redefine regular options.
     (:creator "CREATOR" nil org-html-creator-string)
@@ -1914,20 +1914,6 @@ nil - don't open."
   :version "29.4"
   :package-version '(Org . "9.8")
   :type '(choice (const top) (const text-content)))
-
-(defcustom org-html-multipage-split-function
-  'org-html-multipage-split
-  "Function to call when multipage output is requested.
-This function is called on the final parse tree.  The function
-has to accept two arguments:
-
-- DATA is the completed parse tree before splitting
-
-- INFO is a plist used as a communication channel."
-  :group 'org-export-html
-  :version "29.4"
-  :package-version '(Org . "9.8")
-  :type 'function)
 
 (defcustom org-html-multipage-split-level 'toc
   "How to split the ORG file into multiple HTML pages.
