@@ -1978,7 +1978,12 @@ Return a string or a list of strings."
 			     (broken-link-handler
 			      (funcall transcoder data nil info))
                            (funcall transcoder data nil info)))))
-		 ;; Element/Object with contents.
+                 ((and (eq (org-element-type data) 'org-data)
+                       (plist-get info :multipage))
+                  (mapcar (lambda (org-page)
+                            (org-export-data org-page info))
+                          (org-element-contents data)))
+                 ;; Element/Object with contents.
 		 (t
 		  (let ((transcoder (org-export-transcoder data info)))
 		    (when transcoder
@@ -3019,7 +3024,6 @@ export information channel."
                        backend info subtreep visible-only ext-plist))
 	   ;; Eventually transcode TREE.  Wrap the resulting string into
 	   ;; a template.
-           (setq global-exported-pre (plist-get info :exported-data))
 	   (let ((output
                   (or (org-export-data (plist-get info :parse-tree) info)
                       "")))
@@ -3045,11 +3049,13 @@ export information channel."
                     output))
              (if (length= output 1) (car output) output))))))))
 
-(defun org-export-transcode-org-page (org-page _ info)
+(defun org-export-transcode-org-page (org-page contents info)
   "Transcode ORG-PAGE into a string according to the backend.
 
 ORG-PAGE is a pseudo element containing the parse tree of one
 page with (optional) additional page specific properties.
+
+CONTENTS are the transcoded contents of the page as a string.
 
 INFO is used as communication channel."
   (let ((headline (car (org-element-map org-page 'headline 'identity t))))
@@ -3063,8 +3069,7 @@ INFO is used as communication channel."
                    (plist-get info :headline-numbering))
                   info))
            (body (org-element-normalize-string
-                  (or (org-export-data headline info)
-                      "")))
+                  (or contents "")))
            (inner-template (if (plist-get info :multipage)
                                (alist-get 'multipage-inner-template
                                           (plist-get info :translate-alist))
@@ -3088,7 +3093,6 @@ INFO is used as communication channel."
       ;; Remove all text properties since they cannot be
       ;; retrieved from an external process.  Finally call
       ;; final-output filter and return result.
-      (setq global-output output)
       (let ((final-output (org-no-properties
                            (org-export-filter-apply-functions
                             (plist-get info :filter-final-output)
@@ -3101,25 +3105,18 @@ INFO is used as communication channel."
   "Transcode DATA with BODY.  Return transcoded string.
 DATA is the top `org-data' node of the parse-tree.  INFO is the
 communication channel plist."
-  (if (plist-get info :multipage)
-      ;;; for multipage output the `org-data' node contains `org-page'
-      ;;; pseudo elements as contents, so we call `org-export-data' on
-      ;;; each of them and return the collected results.
-      (mapcar (lambda (org-page)
-                (org-export-data org-page info))
-              (org-element-contents data))
-    (let* ((inner-template (cdr (assq 'inner-template
-                                      (plist-get info :translate-alist))))
-           (full-body (org-export-filter-apply-functions
-                       (plist-get info :filter-body)
-                       (if (not (functionp inner-template)) body
-                         (funcall inner-template body info))
-                       info))
-           (template (cdr (assq 'template
-                                (plist-get info :translate-alist))))
-           (body-only (memq 'body-only (plist-get info :export-options))))
-      (if (or (not (functionp template)) body-only) full-body
-        (funcall template full-body info)))))
+  (let* ((inner-template (cdr (assq 'inner-template
+                                    (plist-get info :translate-alist))))
+         (full-body (org-export-filter-apply-functions
+                     (plist-get info :filter-body)
+                     (if (not (functionp inner-template)) body
+                       (funcall inner-template body info))
+                     info))
+         (template (cdr (assq 'template
+                              (plist-get info :translate-alist))))
+         (body-only (memq 'body-only (plist-get info :export-options))))
+    (if (or (not (functionp template)) body-only) full-body
+      (funcall template full-body info))))
 
 (defun org-export--annotate-info (backend info &optional subtreep visible-only ext-plist)
   "Annotate the INFO plist according to the BACKEND.
