@@ -4782,11 +4782,11 @@ Return the list of the toplevel headlines of all pages."
 The function is called in `org-export-annotate-info' after the
 parse-tree is completed and its properties collected.  The
 function takes care of splitting the parse-tree into the subtrees
-for each page, creating org-page pseudo elements, adding them in
-a list in the :multipage-org-pages property of info.  In addition
-lookup alists for the stripped pages, for the page-urls, the
-navigation elements, the toc, etc. are added to info, which are
-needed by the html transcoders.
+for each page, creating org-page pseudo elements which finally
+get adopted by the org-data top element of the parse-tree
+replacing its former content.  In addition lookup alists for the
+stripped pages, for the page-urls, the navigation elements, the
+toc, etc., needed by the html transcoders are added to info.
 
 DATA is the completed parse-tree of the document.
 
@@ -4886,20 +4886,6 @@ INFO is the communication channel."
         (plist-put info :html-top-title
                    (org-html-element-title
                     (car (plist-get info :section-trees))))
-        ;; collect all org-pages to be exported.
-        (plist-put info :multipage-org-pages
-                   (cl-loop
-                    for file in section-filenames
-                    for tl-headline in section-trees
-                    collect
-                    (list 'org-page
-                          (list :output-file (format "%s/%s" dir file)
-                                :tl-headline tl-headline
-                                :tl-headline-number
-                                (alist-get
-                                 tl-headline
-                                 stripped-section-headline-numbering))
-                          nil)))
         (setf (cddr data) nil)
         (apply 'org-element-adopt-elements data
                (cl-loop
@@ -4915,8 +4901,8 @@ INFO is the communication channel."
                                     tl-headline
                                     stripped-section-headline-numbering)))))
                   (org-element-adopt-elements page tl-headline)
-                  (setq global-info info)
-                  page)))))))
+                  page))))))
+  data)
 
 (defun org-html--generate-tl-url-lookup (info)
   "Return an assoc list for all headlines appearing in the toc.
@@ -5209,12 +5195,13 @@ Return output directory's name."
                (plist-get environment :html-multipage-export-directory))))
     (if (not (file-writable-p dir)) (error "Output dir not writable")
       (let ((output
-             (org-export-as backend subtreep visible-only body-only
-                            (cl-list*
-                             :async async
-                             :multipage t
-                             :verified-export-directory dir
-                             ext-plist))))
+             (ensure-list
+              (org-export-as backend subtreep visible-only body-only
+                             (cl-list*
+                              :async async
+                              :multipage t
+                              :verified-export-directory dir
+                              ext-plist)))))
         (when (plist-get environment :html-multipage-clear-export-directory)
           (message "clearing export-directory.")
           (dolist
@@ -5231,7 +5218,6 @@ Return output directory's name."
                      (if (listp file) (mapcar post file) (funcall post file)))))
             (let (file)
               (setq file (org-export--write-output out encoding))
-              (message "wrote %s" file)
               (when (and (org-export--copy-to-kill-ring-p) (org-string-nw-p output))
                 (org-kill-new output))
               ;; Get proper return value.
@@ -5242,7 +5228,10 @@ Return output directory's name."
                 (if (listp file) (mapcar post file) (funcall post file))))))
         (if (member system-type '(darwin gnu/linux gnu))
             (shell-command (format "ln -s %s %s/index.html" (get-text-property 0 :output-file (car output)) dir)))
-        (message "done!\n")
+        (let ((len (length output)))
+          (if (<= len 1)
+              (message "%s file written to %s, done!\n" len dir)
+            (message "%s files written to %s, done!\n" len dir)))
         (cl-case (plist-get environment :html-multipage-open)
           ('browser (org-open-file (format "%s" (get-text-property 0 :output-file (car output)))))
           ('buffer (find-file (format "%s" (get-text-property 0 :output-file (car output))))))))))

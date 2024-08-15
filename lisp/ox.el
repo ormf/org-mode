@@ -3221,11 +3221,16 @@ still inferior to file-local settings."
     ;; to communication channel.  This is responsible for setting
     ;; :parse-tree to TREE.
     (setq info (org-export--collect-tree-properties tree info))
+    ;; In case of multipage output call the multipage split function
+    ;; and multipage filter functions to return the multipage
+    ;; parse-tree.
     (when (plist-get info :multipage)
       (setq tree (org-export-filter-apply-functions
                   (plist-get info :filter-multipage)
                   (funcall
-                   (cdr (assq 'multipage-split-function (plist-get info :translate-alist))) tree info)
+                   (cdr (assq 'multipage-split-function
+                              (plist-get info :translate-alist)))
+                   tree info)
                   info)))
     ;; Process citations and bibliography.  Replace each citation
     ;; and "print_bibliography" keyword in the parse tree with
@@ -3979,7 +3984,6 @@ applied."
     (intern
      (or (cdr (assoc backend org-export-snippet-translation-alist))
 	 backend))))
-
 
 ;;;; For Footnotes
 ;;
