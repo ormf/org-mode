@@ -4929,7 +4929,11 @@ INFO is the communication channel."
                               (cdr (assoc
                                     tl-elem
                                     stripped-section-headline-numbering))
-                              org-export-headline-levels)
+                              (or (if (numberp (plist-get info :html-multipage-split-level))
+                                      (plist-get info :html-multipage-split-level))
+                                  (if (numberp (plist-get info :with-toc))
+                                      (plist-get info :with-toc))
+                                  3))
                            (org-html-string-to-filename title))
                          filenames)
                         filenames))
@@ -5252,7 +5256,7 @@ Return output directory's name."
       ((> l1 l2) (not (equal tl-headline-number
                              (butlast headline-number))))
       (t (not (equal (butlast headline-number)
-                     (butlast (butlast tl-headline-number)))))))))
+                     (cl-subseq tl-headline-number 0 (- l1 1)))))))))
 
 (defun org-html-collect-local-headlines (info scope)
   "Collect all local headlines of headline-numbering.
