@@ -3815,12 +3815,7 @@ INFO is a plist holding contextual information.  See
 	  ;; Link points to a headline.
 	  (`headline
 	   (let ((href
-                  (org-html--full-reference
-                   (if (plist-get info :multipage)
-                       (alist-get destination
-                                  (plist-get info :stripped-hl-to-parse-tree-hl))
-                     destination)
-                   info))
+                  (org-html--full-reference destination info))
 		 ;; What description to use?
 		 (desc
 		  ;; Case 1: Headline is numbered and LINK has no
