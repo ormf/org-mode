@@ -4855,18 +4855,6 @@ INFO is the communication channel."
               (lambda (hl) (alist-get hl (plist-get info :tl-url-lookup)))
               section-trees)))
         (plist-put info :section-filenames section-filenames)
-        ;; bidirectional lookup tables to map between the
-        ;; stripped-section headlines and their global
-        ;; parse-tree equvialent.
-        (plist-put
-         info :stripped-hl-to-parse-tree-hl
-         (append
-          (cl-mapcar 'cons
-                     (mapcar 'car stripped-section-headline-numbering)
-                     (mapcar 'car headline-numbering))
-          (cl-mapcar 'cons
-                     (mapcar 'car headline-numbering)
-                     (mapcar 'car stripped-section-headline-numbering))))
         ;; collect the toc information to avoid repeated
         ;; recalculation in the toc transcoder for the
         ;; individual pages.
