@@ -112,8 +112,7 @@
     (underline . org-html-underline)
     (verbatim . org-html-verbatim)
     (verse-block . org-html-verse-block))
-  :filters-alist '((:filter-multipage . nil)
-                   (:filter-options . org-html-infojs-install-script)
+  :filters-alist '((:filter-options . org-html-infojs-install-script)
 		   (:filter-parse-tree . org-html-image-link-filter)
 		   (:filter-final-output . org-html-final-function))
   :menu-entry
@@ -3631,7 +3630,6 @@ CONTENTS is nil.  INFO is a plist holding contextual information."
   (concat (org-html-close-tag "br" nil info) "\n"))
 
 ;;;; Link
-
 (defun org-html-image-link-filter (data _backend info)
 "Process image links that are inside descriptions.
 DATA is the parse tree.  INFO is an info plist.
